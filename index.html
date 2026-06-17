@@ -1114,6 +1114,11 @@ const TMDB_KEY = '782c9022d9e39a9b026059aacb1fd02b';
 const TMDB_BASE = 'https://api.themoviedb.org/3';
 const IMG_BASE = 'https://image.tmdb.org/t/p/';
 
+// PROXY HELPER TO BYPASS ISP BLOCKS
+function tmdbFetch(url) {
+  return fetch(`https://corsproxy.io/?url=${encodeURIComponent(url)}`);
+}
+
 // ===================== STATE =====================
 let toWatchList = JSON.parse(localStorage.getItem('toWatchList') || '[]');
 let watchedList = JSON.parse(localStorage.getItem('watchedList') || '[]');
@@ -1126,7 +1131,6 @@ let goatedTVLoaded = false;
 let currentGoatedType = 'movie';
 let currentWatchlistType = 'all';
 let currentWatchedType = 'all';
-// ADDED: Profile Name State
 let profileName = localStorage.getItem('cineProfileName') || 'Darshak';
 
 // ===================== LEVELS =====================
@@ -1165,7 +1169,7 @@ function save(){
 function recalcScore(){
   let s = 0;
   watchedList.forEach(item => {
-    s += 20; // base for watching
+    s += 20; 
     if(item.personalRating) s += item.personalRating * 5;
   });
   toWatchList.forEach(() => s += 2);
@@ -1210,7 +1214,6 @@ navTabs.forEach(tab => {
   tab.addEventListener('click', () => showView(tab.dataset.view));
 });
 
-// Media type tabs
 document.querySelectorAll('.mt-tab[data-list]').forEach(tab => {
   tab.addEventListener('click', () => {
     const list = tab.dataset.list;
@@ -1290,7 +1293,7 @@ async function doSearch(q){
       const type = currentFilter==='all'?'multi':(currentFilter==='movie'?'movie':'tv');
       url=`${TMDB_BASE}/search/${type}?api_key=${TMDB_KEY}&query=${encodeURIComponent(q)}&include_adult=false`;
     }
-    const res = await fetch(url);
+    const res = await tmdbFetch(url);
     const data = await res.json();
     const results = (data.results||[]).filter(r=>r.media_type!=='person'||currentFilter==='all');
     searchLoading.classList.add('hidden');
@@ -1314,7 +1317,6 @@ async function doSearch(q){
   }
 }
 
-// Filter chips
 document.querySelectorAll('.filter-chips .chip').forEach(chip => {
   chip.addEventListener('click', () => {
     document.querySelectorAll('.filter-chips .chip').forEach(c=>c.classList.remove('active'));
@@ -1478,7 +1480,6 @@ function setRating(id, listType, stars){
   item.personalRating = stars;
   save();
   updateScore();
-  // Update stars visually
   const container = document.getElementById(`stars-${id}`);
   if(container){
     container.querySelectorAll('.star-btn').forEach((s,i)=>{
@@ -1532,8 +1533,8 @@ function renderWatched(){
 async function loadGoatedCards(){
   try{
     const [movRes, tvRes] = await Promise.all([
-      fetch(`${TMDB_BASE}/movie/top_rated?api_key=${TMDB_KEY}&page=1`),
-      fetch(`${TMDB_BASE}/tv/top_rated?api_key=${TMDB_KEY}&page=1`)
+      tmdbFetch(`${TMDB_BASE}/movie/top_rated?api_key=${TMDB_KEY}&page=1`),
+      tmdbFetch(`${TMDB_BASE}/tv/top_rated?api_key=${TMDB_KEY}&page=1`)
     ]);
     const movData = await movRes.json();
     const tvData = await tvRes.json();
@@ -1576,7 +1577,7 @@ async function loadGoatedFull(type){
   grid.innerHTML='';
   loading.classList.remove('hidden');
   try{
-    const res = await fetch(`${TMDB_BASE}/${type}/top_rated?api_key=${TMDB_KEY}&page=1`);
+    const res = await tmdbFetch(`${TMDB_BASE}/${type}/top_rated?api_key=${TMDB_KEY}&page=1`);
     const data = await res.json();
     loading.classList.add('hidden');
     const results = data.results||[];
@@ -1637,9 +1638,9 @@ async function openDetail(item, autoTrailer=false){
 
   try{
     const [detailRes, videosRes, reviewsRes] = await Promise.all([
-      fetch(`${TMDB_BASE}/${type}/${id}?api_key=${TMDB_KEY}&append_to_response=credits`),
-      fetch(`${TMDB_BASE}/${type}/${id}/videos?api_key=${TMDB_KEY}`),
-      fetch(`${TMDB_BASE}/${type}/${id}/reviews?api_key=${TMDB_KEY}&page=1`)
+      tmdbFetch(`${TMDB_BASE}/${type}/${id}?api_key=${TMDB_KEY}&append_to_response=credits`),
+      tmdbFetch(`${TMDB_BASE}/${type}/${id}/videos?api_key=${TMDB_KEY}`),
+      tmdbFetch(`${TMDB_BASE}/${type}/${id}/reviews?api_key=${TMDB_KEY}&page=1`)
     ]);
     const detail = await detailRes.json();
     const videos = await videosRes.json();
@@ -1756,7 +1757,6 @@ document.getElementById('detailModal').addEventListener('click', (e) => {
   if(e.target === document.getElementById('detailModal')) closeModal();
 });
 
-// Swipe to close modal
 let touchStartY = 0;
 document.getElementById('modalSheet').addEventListener('touchstart', e=>{ touchStartY=e.touches[0].clientY; });
 document.getElementById('modalSheet').addEventListener('touchmove', e=>{
@@ -1767,7 +1767,7 @@ document.getElementById('modalSheet').addEventListener('touchmove', e=>{
 // ===================== PROFILE =====================
 function renderProfile(){
   const level = getLevel();
-  document.getElementById('profileName').textContent = profileName; // Ensure name is rendered
+  document.getElementById('profileName').textContent = profileName; 
   document.getElementById('levelName').textContent = level.name;
   document.getElementById('levelTagline').textContent = level.tagline;
   document.getElementById('profileEmoji').textContent = level.emoji;
@@ -1784,7 +1784,6 @@ function renderProfile(){
   document.getElementById('xpBar').style.width = pct+'%';
   document.getElementById('xpText').textContent = nextLevel ? `${score} / ${nextLevel.min} XP` : 'MAX LEVEL';
 
-  // Level roadmap
   const roadmap = document.getElementById('levelRoadmap');
   roadmap.innerHTML=`<div style="font-size:11px;color:var(--text-secondary);margin-bottom:10px;font-weight:600">YOUR JOURNEY</div><div class="level-rows">${LEVELS.map(l=>{
     const unlocked = score >= l.min;
@@ -1799,7 +1798,6 @@ function renderProfile(){
     </div>`;
   }).join('')}</div>`;
 
-  // Achievements
   let unlocked = 0;
   const grid = document.getElementById('achievementsGrid');
   grid.innerHTML = ACHIEVEMENTS.map(a => {
@@ -1815,7 +1813,7 @@ function renderProfile(){
   document.getElementById('achieveBadge').textContent = `${unlocked}/${ACHIEVEMENTS.length}`;
 }
 
-// ADDED: ===================== NAME EDITOR LOGIC =====================
+// ===================== NAME EDITOR LOGIC =====================
 function openNameEditor(){
   const modal = document.getElementById('nameEditorModal');
   const input = document.getElementById('nameInput');
@@ -1841,12 +1839,10 @@ function saveProfileName(){
   closeNameEditor();
 }
 
-// Input character counter
 document.getElementById('nameInput').addEventListener('input', (e) => {
   document.getElementById('nameCharCount').textContent = `${e.target.value.length}/20`;
 });
 
-// Close editor on background click
 document.getElementById('nameEditorModal').addEventListener('click', (e) => {
   if(e.target === document.getElementById('nameEditorModal')) closeNameEditor();
 });
@@ -1908,7 +1904,6 @@ function spawnParticles(){
 // ===================== UI UPDATE =====================
 function updateUI(){
   document.getElementById('navScore').textContent = score;
-  // Badge updates
   const wlBadge = document.getElementById('navBadgeWatchlist');
   const wdBadge = document.getElementById('navBadgeWatched');
   wlBadge.textContent = toWatchList.length;
@@ -1921,12 +1916,11 @@ function updateUI(){
 
 // ===================== INIT =====================
 async function init(){
-  document.getElementById('profileName').textContent = profileName; // Ensure name is set immediately on boot
+  document.getElementById('profileName').textContent = profileName;
   updateUI();
   score = recalcScore();
   save();
   await loadGoatedCards();
-  // Pre-check achievements on load
   checkAchievements();
 }
 
