@@ -4,6 +4,18 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Darshak — Personal Cinematic Library</title>
+  <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#000000">
+<link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3658/3658959.png">
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js')
+        .then(reg => console.log('Service worker registered!', reg))
+        .catch(err => console.error('Service worker failed:', err));
+    });
+  }
+</script>
 <style>
 /* ===================== CSS VARIABLES ===================== */
 :root {
