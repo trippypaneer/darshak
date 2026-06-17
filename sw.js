@@ -1,4 +1,4 @@
-const CACHE_NAME = 'darshak-v1';
+const CACHE_NAME = 'darshak-v2';
 const ASSETS = [
   'index.html',
   'manifest.json'
